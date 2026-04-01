@@ -1,0 +1,70 @@
+services:
+
+  # runs Zookeeper, which Kafka needs to manage cluster state and metadata.
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.6.1
+    container_name: kafka_zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+
+  # runs the Kafka broker, the actual message queue that stores and serves messages to producers and consumers.
+  kafka:
+    image: confluentinc/cp-kafka:7.6.1
+    container_name: kafka_broker
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: "1"
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: "1"
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_CREATE_TOPICS: "binance-trades:1:1"
+    ports:
+      - "29092:9092"
+
+  # runs the main application container
+  app:
+    build: .
+    container_name: data_engineering_project
+    volumes:
+      - .:/app
+    depends_on:
+      - kafka
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      TOPIC_NAME: binance-trades
+      BINANCE_SYMBOL: btcusdt
+    command: ["tail", "-f", "/dev/null"]
+
+  # starts the Binance websocket producer script and writes live trade events into Kafka.
+  producer:
+    build: .
+    depends_on:
+      - kafka
+    volumes:
+      - .:/app
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      TOPIC_NAME: binance-trades
+      BINANCE_SYMBOL: btcusdt
+      BINANCE_API_KEY: ${BINANCE_API_KEY:-}
+      BINANCE_API_SECRET: ${BINANCE_API_SECRET:-}
+    command: ["python", "-m", "src.streaming.producer"]
+
+  # starts the Kafka consumer script and reads/prints messages from the Kafka topic.
+  consumer:
+    build: .
+    depends_on:
+      - kafka
+    volumes:
+      - .:/app
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      TOPIC_NAME: binance-trades
+      CONSUMER_GROUP: binance-consumer-group
+    command: ["python", "-m", "src.streaming.consumer"]

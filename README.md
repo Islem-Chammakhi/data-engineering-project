@@ -7,10 +7,10 @@ Build a **data engineering pipeline** to correlate **news events** with **price 
 - **Gold**
 
 The goal is to detect whether relevant news causes:
-- sudden price moves
-- measurable returns after the event
-- stronger reactions in one asset vs another
-- abnormal spikes compared to normal volatility
+- Sudden price moves
+- Measurable returns after the event
+- Stronger reactions in one asset vs another
+- Abnormal spikes compared to normal volatility
 
 
 
@@ -75,8 +75,8 @@ Key advantages:
 - **MinIO** (S3-compatible, local with Docker)
 
 Used to store:
-- raw JSON / CSV / logs
-- cleaned or enriched intermediate files
+- Raw JSON / CSV / logs
+- Cleaned or enriched intermediate files
 
 ### 4. Orchestration
 - **Prefect** or **Airflow**
@@ -91,9 +91,9 @@ Used to store:
 1. **Ingest** market + news data from APIs  
 2. **Store raw data** in **MinIO**  
 3. **Transform** data:
-   - normalize timestamps
-   - align news with price windows
-   - calculate returns / volatility / spikes
+   - Normalize timestamps
+   - Align news with price windows
+   - Calculate returns / volatility / spikes
 4. **Load curated data** into **Neon**
 5. **Orchestrate** jobs with **Prefect/Airflow**
 6. **Visualize insights** in **Streamlit**

@@ -9,7 +9,7 @@ Config -> Kafka -> Producer -> Topic -> Consumer
 - Docker starts Zookeeper then Kafka
 - Producer connects to Binance websocket
 - Each trade -> producer sends to `binance-trades` Kafka topic
-- Consumer reads from that topic and prints messages
+- Consumer reads from that topic and prints out the incoming trades
 
 ## File Structure
 - `src/config/configuration.py` — loads `.env` and env values

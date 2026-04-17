@@ -1,1 +1,4 @@
-"# data-engineering-project" 
+"# data-engineering-project"
+dep for the db :
+sqlalchamy
+psycopg2

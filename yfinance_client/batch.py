@@ -1,6 +1,11 @@
+import sys
+from pathlib import Path
+
+# Add parent directory to path to allow imports when running directly
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
 import yfinance as yf
-from last_timestamp.last_timestamp import get_current_utc_time, update_state,get_last_timestamp
-from minio_client.minio import save_to_minio
+from time_client.last_timestamp import get_current_utc_time,get_last_timestamp
 
 def get_commodity_data(symbol,start_str, interval="1m", end_str=None):
     
@@ -12,7 +17,7 @@ def get_commodity_data(symbol,start_str, interval="1m", end_str=None):
 
 
 
-def save_gold_data(bucket_name,interval="1m"):
+def get_gold_data(interval="1m"):
     current_time = get_current_utc_time()
     last_timestamp = get_last_timestamp("yfinance-gold").split("T")[0]
     print(f"Fetching yfinance data at {current_time}...")
@@ -24,13 +29,18 @@ def save_gold_data(bucket_name,interval="1m"):
     "granularity":interval,
     "timestamp": current_time}
     path=f"yfinance/batch/gold/{current_time}.json"
-    save_to_minio(bucket_name, path, data, metadata=metadata)
-    update_state("yfinance-gold", current_time)
+    return {
+    "data": data,
+    "metadata": metadata,
+    "path": path,
+    "timestamp": current_time,
+    "length": len(data)
+    }
     
 
 
 
-def save_oil_data(bucket_name,interval="1m"):
+def get_oil_data(interval="1m"):
     current_time = get_current_utc_time()
     last_timestamp = get_last_timestamp("yfinance-oil").split("T")[0]
     print(f"Fetching yfinance data at {current_time}...")
@@ -42,5 +52,13 @@ def save_oil_data(bucket_name,interval="1m"):
     "granularity":interval,
     "timestamp": current_time}
     path=f"yfinance/batch/oil/{current_time}.json"
-    save_to_minio(bucket_name, path, data, metadata=metadata)
-    update_state("yfinance-oil", current_time)
+    return {
+    "data": data,
+    "metadata": metadata,
+    "path": path,
+    "timestamp": current_time,
+    "length": len(data)
+    }
+
+
+# print(get_gold_data())

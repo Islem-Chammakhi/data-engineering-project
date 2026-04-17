@@ -1,8 +1,13 @@
 import os
+import sys
+from pathlib import Path
+
+# Add parent directory to path to allow imports when running directly
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
 from dotenv import load_dotenv
 from newsapi import NewsApiClient
-from last_timestamp.last_timestamp import get_current_utc_time, update_state,get_last_timestamp
-from minio_client.minio import save_to_minio
+from time_client.last_timestamp import get_current_utc_time,get_last_timestamp
 load_dotenv()
 
 api_key = os.getenv("NEWSAPI_KEY")
@@ -31,7 +36,7 @@ sort_by="publishedAt"
 page_size=100
 page=1
 
-def get_newsapi_data(from_param,query=query_ar,to=None,language=ar_langugae,sort_by=sort_by,page=page,page_size=page_size):
+def fetch_newsapi_data(from_param,query=query_ar,to=None,language=ar_langugae,sort_by=sort_by,page=page,page_size=page_size):
     
     return newsapi.get_everything(q=query,
                                       from_param=from_param,
@@ -57,17 +62,25 @@ def format_newsapi_data(newsapi_response):
         formatted_articles.append(formatted_article)
     return formatted_articles
 
-def save_newsapi_data(bucket_name):
+def get_newsapi_data():
     current_time = get_current_utc_time()
     last_timestamp = get_last_timestamp("newsapi-arabic")
     print(f"Fetching newsapi data at {current_time}...")
-    ar_formatted_news = format_newsapi_data(get_newsapi_data(last_timestamp))
+    ar_formatted_news = format_newsapi_data(fetch_newsapi_data(from_param=last_timestamp))
     ar_news_metadata= {
       "source": "news api",
       "type": "batch",
       "language": "ar",
       "timestamp": current_time}
     path=f"news/batch/arabic/{current_time}.json"
-    save_to_minio(bucket_name, path, ar_formatted_news, metadata=ar_news_metadata)
-    update_state("newsapi-arabic", current_time)
-    
+
+    return {
+        "data": ar_formatted_news,
+        "metadata": ar_news_metadata,
+        "path": path,
+        "timestamp": current_time,
+        "length": len(ar_formatted_news)
+    }
+
+# if __name__ == "__main__":
+# print(get_newsapi_data())

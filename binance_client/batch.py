@@ -1,8 +1,13 @@
 import os
+import sys
+from pathlib import Path
+
+# Add parent directory to path to allow imports when running directly
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
 from dotenv import load_dotenv
 from binance.client import Client
-from minio_client.minio import save_to_minio
-from last_timestamp.last_timestamp import get_current_utc_time,update_state,get_last_timestamp
+from time_client.last_timestamp import get_current_utc_time,get_last_timestamp
 
 load_dotenv()
 
@@ -30,7 +35,7 @@ def transform_data(klines):
     return transformed_data
 
 
-def save_bitcoin_data(bucket_name,interval="1m"):
+def get_bitcoin_data(interval="1m"):
     current_time = get_current_utc_time()
     last_timestamp = get_last_timestamp("binance-bitcoin")
     print(f"Fetching binance data at {current_time}...")
@@ -43,5 +48,12 @@ def save_bitcoin_data(bucket_name,interval="1m"):
       "granularity": interval,
       "timestamp": current_time}
     path=f"binance/batch/bitcoin/{current_time}.json"
-    save_to_minio(bucket_name,path , transformed_data,metadata=metadata)
-    update_state("binance-bitcoin", current_time)
+    return {
+        "data": transformed_data,
+        "metadata": metadata,
+        "path": path,
+        "timestamp": current_time,
+        "length": len(transformed_data)
+    }
+
+# get_bitcoin_data()

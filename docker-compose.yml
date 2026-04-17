@@ -1,6 +1,8 @@
 services:
 
-  # runs Zookeeper, which Kafka needs to manage cluster state and metadata.
+  # ingestion layer #
+
+  # runs zookeeper, which kafka needs to manage cluster state and metadata.
   zookeeper:
     image: confluentinc/cp-zookeeper:7.6.1
     container_name: kafka_zookeeper
@@ -10,7 +12,7 @@ services:
     ports:
       - "2181:2181"
 
-  # runs the Kafka broker, the actual message queue that stores and serves messages to producers and consumers.
+  # runs the kafka broker, the actual message queue that stores and serves messages to producers and consumers.
   kafka:
     image: confluentinc/cp-kafka:7.6.1
     container_name: kafka_broker
@@ -27,21 +29,7 @@ services:
     ports:
       - "29092:9092"
 
-  # runs the main application container
-  app:
-    build: .
-    container_name: data_engineering_project
-    volumes:
-      - .:/app
-    depends_on:
-      - kafka
-    environment:
-      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
-      TOPIC_NAME: binance-trades
-      BINANCE_SYMBOL: btcusdt
-    command: ["tail", "-f", "/dev/null"]
-
-  # starts the Binance websocket producer script and writes live trade events into Kafka.
+  # starts the binance websocket producer script and writes live trade events into kafka.
   producer:
     build: .
     depends_on:
@@ -56,7 +44,7 @@ services:
       BINANCE_API_SECRET: ${BINANCE_API_SECRET:-}
     command: ["python", "-m", "src.streaming.producer"]
 
-  # starts the Kafka consumer script and reads/prints messages from the Kafka topic.
+  # starts the kafka consumer script and reads/prints messages from the kafka topic.
   consumer:
     build: .
     depends_on:
@@ -68,3 +56,56 @@ services:
       TOPIC_NAME: binance-trades
       CONSUMER_GROUP: binance-consumer-group
     command: ["python", "-m", "src.streaming.consumer"]
+
+
+  # transformation layer #
+  
+  # spark master node that manages the cluster and schedules jobs on worker nodes; also provides the Spark UI on port 8080.
+  spark-master:
+    image: apache/spark:3.5.0
+    container_name: spark_master
+    ports:
+      - "8080:8080"
+      - "7077:7077"
+    environment:
+      - SPARK_MODE=master
+      - SPARK_MASTER_HOST=0.0.0.0
+      - SPARK_MASTER_PORT=7077
+      - SPARK_MASTER_WEBUI_PORT=8080
+    command: /opt/spark/bin/spark-class org.apache.spark.deploy.master.Master
+    volumes:
+      - spark-data:/opt/spark/work-dir
+      - .:/app
+
+  # spark worker node that executes tasks assigned by the master (can be scaled); scale with docker compose up --scale spark-worker=2.
+  spark-worker:
+    image: apache/spark:3.5.0
+    depends_on:
+      - spark-master
+    command: /opt/spark/bin/spark-class org.apache.spark.deploy.worker.Worker spark://spark-master:7077
+    ports:
+      - "8081:8081"
+    volumes:
+      - spark-data:/opt/spark/work-dir
+      - .:/app
+    environment:
+      - SPARK_MODE=worker
+      - SPARK_MASTER_URL=spark://spark-master:7077
+      - SPARK_WORKER_MEMORY=1g
+      - SPARK_WORKER_CORES=2
+
+  # container used to submit spark jobs manually using spark-submit
+  spark:
+    image: apache/spark:3.5.0
+    depends_on:
+      - spark-master
+    volumes:
+      - .:/app
+    working_dir: /app
+    environment:
+      - PYSPARK_PYTHON=python3
+      - PYTHONPATH=/app
+    tty: true
+
+volumes:
+  spark-data:

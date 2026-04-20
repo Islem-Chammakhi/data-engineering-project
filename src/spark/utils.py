@@ -4,7 +4,18 @@ from pyspark.sql.functions import col, date_format, from_unixtime, round as spar
 
 # 1. create spark session
 def create_spark_session(app_name: str, master: str = "spark://spark-master:7077") -> SparkSession: 
-    return SparkSession.builder.master(master).appName(app_name).config("spark.sql.session.timeZone", "UTC").getOrCreate()
+    return (
+        SparkSession.builder
+        .master(master)
+        .appName(app_name)
+        .config("spark.hadoop.fs.s3a.endpoint", "http://minio:9000")
+        .config("spark.hadoop.fs.s3a.access.key", "islem")
+        .config("spark.hadoop.fs.s3a.secret.key", "islemislem")
+        .config("spark.hadoop.fs.s3a.path.style.access", "true")
+        .config("spark.hadoop.fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
+        .config("spark.hadoop.fs.s3a.connection.ssl.enabled", "false")
+        .getOrCreate()
+    )
 
 
 # 2. convert  timestamp to a standardized string event_time.
@@ -80,4 +91,7 @@ def read_json(spark, path: str):
 
 # write a Spark DataFrame to parquet (overwrite mode by default)
 def write_parquet(df, path: str, mode: str = "overwrite"):
-    df.write.mode(mode).parquet(path)
+    df.write \
+  .mode("append") \
+  .partitionBy("event_time") \
+  .parquet(path)

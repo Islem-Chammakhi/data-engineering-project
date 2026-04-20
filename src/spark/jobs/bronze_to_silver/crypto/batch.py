@@ -8,8 +8,8 @@ def main():
     spark = create_spark_session(app_name="crypto_batch")
 
     # choose input and output paths
-    input_path = os.getenv("CRYPTO_BATCH_INPUT_PATH", "/app/src/data/crypto_batch.json")
-    output_path = os.getenv("CRYPTO_BATCH_OUTPUT_PATH", "/app/data/silver/crypto_batch")
+    input_path = "s3a://raw-data-staging/binance/batch/bitcoin/"
+    output_path = "s3a://silver-data-staging/binance/bitcoin/"
 
     # read the raw local JSON data (in production, read from minio)
     trades = read_json(spark, input_path)

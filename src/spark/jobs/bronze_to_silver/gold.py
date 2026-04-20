@@ -8,8 +8,8 @@ def main():
     spark = create_spark_session(app_name="gold")
 
     # choose input and output paths
-    input_path = os.getenv("GOLD_INPUT_PATH", "/app/src/data/oilgold.json")
-    output_path = os.getenv("GOLD_OUTPUT_PATH", "/app/data/silver/gold")
+    input_path = "s3a://raw-data-staging/yfinance/batch/gold/"
+    output_path = "s3a://silver-data-staging/yfinance/gold/"
 
     # read the raw local JSON data (in production, read from minio)
     gold_df = read_json(spark, input_path)

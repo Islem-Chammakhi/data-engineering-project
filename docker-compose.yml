@@ -42,7 +42,7 @@ services:
       BINANCE_SYMBOL: btcusdt
       BINANCE_API_KEY: ${BINANCE_API_KEY:-}
       BINANCE_API_SECRET: ${BINANCE_API_SECRET:-}
-    command: ["python", "-m", "src.streaming.producer"]
+    command: [ "python", "-m", "src.streaming.producer" ]
 
   # starts the kafka consumer script and reads/prints messages from the kafka topic.
   consumer:
@@ -55,11 +55,24 @@ services:
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       TOPIC_NAME: binance-trades
       CONSUMER_GROUP: binance-consumer-group
-    command: ["python", "-m", "src.streaming.consumer"]
+    command: [ "python", "-m", "src.streaming.consumer" ]
 
+  # ! storage Layer 
+  minio:
+    image: minio/minio:latest
+    container_name: minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: islem
+      MINIO_ROOT_PASSWORD: islemislem
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio_data:/data
 
-  # transformation layer #
-  
+  # ! transformation layer 
+
   # spark master node that manages the cluster and schedules jobs on worker nodes; also provides the Spark UI on port 8080.
   spark-master:
     image: apache/spark:3.5.0
@@ -82,7 +95,8 @@ services:
     image: apache/spark:3.5.0
     depends_on:
       - spark-master
-    command: /opt/spark/bin/spark-class org.apache.spark.deploy.worker.Worker spark://spark-master:7077
+    command: /opt/spark/bin/spark-class org.apache.spark.deploy.worker.Worker
+      spark://spark-master:7077
     ports:
       - "8081:8081"
     volumes:
@@ -109,3 +123,4 @@ services:
 
 volumes:
   spark-data:
+  minio_data:

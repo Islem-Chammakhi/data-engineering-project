@@ -8,8 +8,8 @@ def main():
     spark = create_spark_session(app_name="news")
 
     # choose input and output paths
-    input_path = os.getenv("NEWS_INPUT_PATH", "/app/src/data/news.json")
-    output_path = os.getenv("NEWS_OUTPUT_PATH", "/app/data/silver/news")
+    input_path = "s3a://raw-data-staging/news/batch/arabic/"
+    output_path = "s3a://silver-data-staging/news/arabic/"
 
     # read the local json data (read data from minio in production)
     news_df = read_json(spark, input_path)

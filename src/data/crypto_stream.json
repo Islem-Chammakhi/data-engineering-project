@@ -1,0 +1,22 @@
+[
+    {
+      "topic": "binance-trades",
+      "partition": 0,
+      "offset": 161,
+      "symbol": "btcusdt",
+      "event_time": 1775074630907,
+      "price": "68089.3300000",
+      "quantity": "0.00008000",
+      "trade_id": 6176369854
+    },
+    {
+      "topic": "binance-trades",
+      "partition": 0,
+      "offset": 162,
+      "symbol": "btcusdt",
+      "event_time": 1775074630907,
+      "price": "68089.3300000",
+      "quantity": "0.00008000",
+      "trade_id": 6176369855
+    }
+]

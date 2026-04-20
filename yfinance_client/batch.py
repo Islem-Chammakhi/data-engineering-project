@@ -17,7 +17,7 @@ def get_commodity_data(symbol,start_str, interval="1m", end_str=None):
 
 
 
-def get_gold_data(interval="1m"):
+def ingest_gold_data(interval="1m"):
     current_time = get_current_utc_time()
     last_timestamp = get_last_timestamp("yfinance-gold").split("T")[0]
     print(f"Fetching yfinance data at {current_time}...")
@@ -39,8 +39,7 @@ def get_gold_data(interval="1m"):
     
 
 
-
-def get_oil_data(interval="1m"):
+def ingest_oil_data(interval="1m"):
     current_time = get_current_utc_time()
     last_timestamp = get_last_timestamp("yfinance-oil").split("T")[0]
     print(f"Fetching yfinance data at {current_time}...")

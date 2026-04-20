@@ -1,16 +1,17 @@
 from minio_client.minio import add_bucket, save_to_minio
-from binance_client.batch import get_bitcoin_data
-from yfinance_client.batch import get_gold_data,get_oil_data
-from news_client.batch import get_newsapi_data
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from binance_client.batch import ingest_bitcoin_data
+from yfinance_client.batch import ingest_gold_data,ingest_oil_data
+from news_client.batch import ingest_newsapi_data
 from time_client.last_timestamp import get_current_utc_time, update_state
 from datetime import datetime
-from minio_client.minio import save_to_minio
+from minio_client.minio import save_to_minio,migrate_to_historical
 from db.session_db import get_session
 from db.schemas.ingestion_task import IngestionTask
 from db.schemas.ingestion_run import IngestionRun
+from prefect import task,flow
 
 
+@task(retries=3, retry_delay_seconds=10)
 def run_task(task_name, func,run_id,bucket_name):
     session = get_session()
     start_time = datetime.utcnow()
@@ -49,7 +50,13 @@ def run_task(task_name, func,run_id,bucket_name):
         session.commit()
         session.close()
 
+    return {
+    "status": status,
+    "path": result.get("path") if result else None
+    }
 
+
+@task(retries=3, retry_delay_seconds=10)
 def finalize_run(run_id):
     session = get_session()
 
@@ -78,8 +85,11 @@ def finalize_run(run_id):
     session.close()
     print(f"Run {run_id} finished with status {status}")
 
+
+@flow(name="market-news-ingestion")
 def get_batch_data(bucket_name):
     add_bucket(bucket_name)
+
     session = get_session()
 
     run = IngestionRun(
@@ -92,19 +102,27 @@ def get_batch_data(bucket_name):
 
     run_id = run.run_id
     session.close()
-    tasks = [
-    ("newsapi-arabic", lambda: get_newsapi_data(), run_id, bucket_name),
-    ("yfinance-gold", lambda: get_gold_data(), run_id, bucket_name),
-    ("yfinance-oil", lambda: get_oil_data(), run_id, bucket_name),
-    ("binance-bitcoin", lambda: get_bitcoin_data(), run_id, bucket_name),
-    ]
-    
 
-    with ThreadPoolExecutor(max_workers=4) as executor:
-        futures = [executor.submit(run_task, name, func, run_id, bucket_name) for name, func, run_id, bucket_name in tasks]
-        for future in as_completed(futures):
-            future.result()
-     
-    finalize_run(run_id)
+    #  Prefect parallel execution
+    futures = [
+        run_task.submit("newsapi-arabic", ingest_newsapi_data, run_id, bucket_name),
+        run_task.submit("yfinance-gold", ingest_gold_data, run_id, bucket_name),
+        run_task.submit("yfinance-oil", ingest_oil_data, run_id, bucket_name),
+        run_task.submit("binance-bitcoin", ingest_bitcoin_data, run_id, bucket_name),
+    ]
+
+    # attendre toutes les tasks
+    runs = [f.result() for f in futures]
+    # results = [f.result() for f in runs]
+    # for r in results:
+    #     if r["status"] == "SUCCESS" and r["path"]:
+    #         migrate_to_historical.submit(
+    #             "raw-data-staging",
+    #             "raw-data-historical",
+    #             r["path"]
+    #         )
+
+    #  task finale
+    finalize_run.submit(run_id)
 
 get_batch_data("raw-data-staging")

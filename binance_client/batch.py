@@ -34,8 +34,7 @@ def transform_data(klines):
         })
     return transformed_data
 
-
-def get_bitcoin_data(interval="1m"):
+def ingest_bitcoin_data(interval="1m"):
     current_time = get_current_utc_time()
     last_timestamp = get_last_timestamp("binance-bitcoin")
     print(f"Fetching binance data at {current_time}...")

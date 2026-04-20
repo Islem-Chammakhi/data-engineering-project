@@ -62,7 +62,8 @@ def format_newsapi_data(newsapi_response):
         formatted_articles.append(formatted_article)
     return formatted_articles
 
-def get_newsapi_data():
+
+def ingest_newsapi_data():
     current_time = get_current_utc_time()
     last_timestamp = get_last_timestamp("newsapi-arabic")
     print(f"Fetching newsapi data at {current_time}...")

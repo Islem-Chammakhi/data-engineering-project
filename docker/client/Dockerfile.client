@@ -1,0 +1,7 @@
+FROM islemchammakhi/spark-base:1.0
+
+USER root
+
+WORKDIR /app
+
+CMD ["bash"]

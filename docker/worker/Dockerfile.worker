@@ -1,0 +1,5 @@
+FROM islemchammakhi/spark-base:1.0
+
+USER root
+
+CMD ["/opt/spark/bin/spark-class", "org.apache.spark.deploy.worker.Worker", "spark://spark-master:7077"]

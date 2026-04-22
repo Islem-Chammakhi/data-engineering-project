@@ -1,0 +1,7 @@
+FROM islemchammakhi/spark-base:1.0
+
+USER root
+
+EXPOSE 7077 8080
+
+CMD ["/opt/spark/bin/spark-class", "org.apache.spark.deploy.master.Master"]

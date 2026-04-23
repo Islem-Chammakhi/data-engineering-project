@@ -1,4 +1,4 @@
-# producer script (read config, connect to kafka, and stream binance trades into kafka)
+# producer script (read config, connect to kafka, and stream binance klines into kafka)
 
 
 # import necessary libraries and modules
@@ -8,7 +8,8 @@ import time
 from kafka import KafkaProducer
 from kafka.errors import NoBrokersAvailable
 from binance import ThreadedWebsocketManager
-from src.config.configuration import ( KAFKA_BOOTSTRAP_SERVERS, TOPIC_NAME, BINANCE_SYMBOL, BINANCE_API_KEY, BINANCE_API_SECRET, )
+from binance.enums import KLINE_INTERVAL_1MINUTE
+from config.configuration import ( KAFKA_BOOTSTRAP_SERVERS, TOPIC_NAME, BINANCE_SYMBOL )
 
 # configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
@@ -34,40 +35,52 @@ def create_producer() -> KafkaProducer:
             time.sleep(2)
 
 
-# process each binance trade event and publish it to kafka
-def handle_trade_message(msg):
-    if not msg or msg.get("e") != "trade":
+# process each binance kline event and publish it to kafka
+def handle_kline_message(msg):
+    if not msg or msg.get("e") != "kline":
         return
 
+    k = msg.get("k") or {}
+    is_final = bool(k.get("x"))
+
+    # Emit the same candle attributes as batch ingestion, plus symbol + is_final.
     record = {
-        "stream_symbol": BINANCE_SYMBOL,
-        "event_time": msg.get("E"),
-        "trade_time": msg.get("T"),
-        "price": msg.get("p"),
-        "quantity": msg.get("q"),
-        "buyer_is_maker": msg.get("m"),
-        "trade_id": msg.get("t"),
-        "raw": msg,
+        "symbol": (k.get("s") or BINANCE_SYMBOL).lower(),
+        "open_time": k.get("t"),
+        "open": k.get("o"),
+        "high": k.get("h"),
+        "low": k.get("l"),
+        "close": k.get("c"),
+        "volume": k.get("v"),
+        "close_time": k.get("T"),
+        "quote_asset_volume": k.get("q"),
+        "number_of_trades": k.get("n"),
+        "is_final": is_final,
     }
-    producer.send(TOPIC_NAME, key=msg.get("s"), value=record)
+
+    # For your plan, we only want closed candles.
+    if not is_final:
+        return
+
+    producer.send(TOPIC_NAME, key=record["symbol"], value=record)
     producer.flush()
-    logging.debug("Published trade %s -> topic %s", msg.get("t"), TOPIC_NAME)
+    logging.debug("Published kline open_time=%s -> topic %s", k.get("t"), TOPIC_NAME)
 
 
 # start the websocket manager and keep the producer running
 def run_producer() -> None:
     global producer
-    logging.info("Starting Binance trade producer")
+    logging.info("Starting Binance kline producer (1m)")
     producer = create_producer()
 
-    if BINANCE_API_KEY and BINANCE_API_SECRET:
-        twm = ThreadedWebsocketManager(api_key=BINANCE_API_KEY, api_secret=BINANCE_API_SECRET)
-    else:
-        twm = ThreadedWebsocketManager()
-
+    twm = ThreadedWebsocketManager()
     twm.start()
-    twm.start_trade_socket(callback=handle_trade_message, symbol=BINANCE_SYMBOL.upper())
-    logging.info("Binance websocket started for %s", BINANCE_SYMBOL.upper())
+    twm.start_kline_socket(
+        callback=handle_kline_message,
+        symbol=BINANCE_SYMBOL.upper(),
+        interval=KLINE_INTERVAL_1MINUTE,
+    )
+    logging.info("Binance websocket started (kline 1m) for %s", BINANCE_SYMBOL.upper())
 
     try:
         while True:

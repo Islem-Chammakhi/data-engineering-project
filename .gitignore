@@ -2,3 +2,4 @@
 ./*/.pytest_cache/
 minio_data/
 .env
+__pycache__

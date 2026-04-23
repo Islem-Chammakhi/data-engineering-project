@@ -7,7 +7,7 @@ import logging
 import time
 from kafka import KafkaConsumer
 from kafka.errors import NoBrokersAvailable
-from src.config.configuration import ( KAFKA_BOOTSTRAP_SERVERS, TOPIC_NAME, CONSUMER_GROUP )
+from config.configuration import ( KAFKA_BOOTSTRAP_SERVERS, TOPIC_NAME, CONSUMER_GROUP )
 
 
 # configure logging
@@ -33,22 +33,28 @@ def create_consumer() -> KafkaConsumer:
             time.sleep(2)
 
 
-# consume records from the kafka topic and print each trade
-def consume_trades() -> None:
+# consume records from the kafka topic and print each candle
+def consume_klines() -> None:
     consumer = create_consumer()
     logging.info("Starting Kafka consumer for topic %s", TOPIC_NAME)
     try:
         for message in consumer:
-            trade = message.value
+            candle = message.value
             print(json.dumps({
                 "topic": message.topic,
                 "partition": message.partition,
                 "offset": message.offset,
-                "symbol": trade.get("stream_symbol"),
-                "event_time": trade.get("event_time"),
-                "price": trade.get("price"),
-                "quantity": trade.get("quantity"),
-                "trade_id": trade.get("trade_id"),
+                "symbol": candle.get("symbol"),
+                "open_time": candle.get("open_time"),
+                "open": candle.get("open"),
+                "high": candle.get("high"),
+                "low": candle.get("low"),
+                "close": candle.get("close"),
+                "volume": candle.get("volume"),
+                "close_time": candle.get("close_time"),
+                "quote_asset_volume": candle.get("quote_asset_volume"),
+                "number_of_trades": candle.get("number_of_trades"),
+                "is_final": candle.get("is_final"),
             }, indent=2))
     finally:
         consumer.close()
@@ -59,6 +65,6 @@ if __name__ == "__main__":
     logging.info("Kafka bootstrap: %s", KAFKA_BOOTSTRAP_SERVERS)
     logging.info("Kafka topic: %s", TOPIC_NAME)
     try:
-        consume_trades()
+        consume_klines()
     except KeyboardInterrupt:
         logging.info("Consumer interrupted by user")

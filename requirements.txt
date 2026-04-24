@@ -7,3 +7,4 @@ psycopg2==2.9.11
 SQLAlchemy==2.0.22
 kafka-python==2.0.2
 six==1.17.0
+pyspark==3.5.0

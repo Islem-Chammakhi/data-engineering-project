@@ -21,12 +21,7 @@ def main():
     news_df = drop_duplicates(news_df, subset=["url", "publishedAt"])
 
     # normalize timestamp
-    news_df = normalize_timestamp(
-        news_df,
-        source_col="publishedAt",
-        target_col="event_time",
-        input_fmt="yyyy-MM-dd'T'HH:mm:ss'Z'",
-    )
+    news_df = normalize_timestamp(news_df, "publishedAt")
 
     # write the transformed data to parquet (column storage) (write to minio in production)
     write_parquet(news_df, output_path)

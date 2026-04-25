@@ -1,8 +1,11 @@
 from db.config_db import engine
 from db.base_db import Base
 
-from schemas.ingestion_run import IngestionRun
-from schemas.ingestion_task import IngestionTask
+from db.schemas.pipeline_run import PipelineRun
+from db.schemas.task import Task
+from db.schemas.dim_news import DimNews
+from db.schemas.dim_asset import DimAsset
+from db.schemas.fact_news_market import FactNewsMarket
 
 
 def init_db():

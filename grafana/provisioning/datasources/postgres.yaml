@@ -1,0 +1,15 @@
+apiVersion: 1
+
+datasources:
+  - name: logs-etl
+    type: postgres
+    access: proxy
+    url: ep-proud-waterfall-alx0iv15.c-3.eu-central-1.aws.neon.tech
+    database: neondb
+    user: neondb_owner
+    secureJsonData:
+      password: npg_fYA2He6tkoyp
+    jsonData:
+      sslmode: require
+      postgresVersion: 1500
+      timescaledb: false

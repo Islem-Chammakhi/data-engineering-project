@@ -15,10 +15,16 @@ load_dotenv()
 client = Client(os.getenv("API_KEY"), os.getenv("SECRET_KEY"), tld='us')
 
 def get_cryptocurrency_data(symbol, interval, start_str):
-    klines = client.get_historical_klines(symbol, interval, start_str)
-    return klines
+    try:
+
+        klines = client.get_historical_klines(symbol, interval, start_str)
+        return klines
+    except Exception as e:
+        raise Exception(f"Binance API failed: {str(e)}")
 
 def transform_data(klines):
+    if not klines:
+        raise ValueError("No data to transform")
     transformed_data = []
     for kline in klines:
         transformed_data.append({
@@ -35,7 +41,7 @@ def transform_data(klines):
     return transformed_data
 
 def ingest_bitcoin_data(interval="1m"):
-    current_time = get_current_utc_time().replace(":","-")
+    current_time = get_current_utc_time()
     last_timestamp = get_last_timestamp("binance-bitcoin")
     print(f"Fetching binance data at {current_time}...")
     klines =  get_cryptocurrency_data("BTCUSDT", Client.KLINE_INTERVAL_1MINUTE, last_timestamp)
@@ -46,6 +52,7 @@ def ingest_bitcoin_data(interval="1m"):
       "symbol": "BTCUSDT",
       "granularity": interval,
       "timestamp": current_time}
+    current_time = current_time.replace(":","-")
     path=f"binance/batch/bitcoin/{current_time}.json"
     return {
         "data": transformed_data,
@@ -54,5 +61,3 @@ def ingest_bitcoin_data(interval="1m"):
         "timestamp": current_time,
         "length": len(transformed_data)
     }
-
-# get_bitcoin_data()

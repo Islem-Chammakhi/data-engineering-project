@@ -20,12 +20,7 @@ def main():
     gold_df = drop_duplicates(gold_df)
 
     # normalize the source timestamp into a standardized event_time field
-    gold_df = normalize_timestamp(
-        gold_df,
-        source_col="Datetime",
-        target_col="event_time",
-        input_fmt="yyyy-MM-dd HH:mm:ssXXX",
-    )
+    gold_df = normalize_timestamp(gold_df, "Datetime")
 
     # normalize numeric fields and round the price fields to 3 decimal places.
     gold_df = normalize_numeric_columns(

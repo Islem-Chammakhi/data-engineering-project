@@ -1,7 +1,6 @@
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, date_format, from_unixtime, round as spark_round, to_timestamp, trim, when
 
-
 # 1. create spark session
 def create_spark_session(app_name: str, master: str = "spark://spark-master:7077") -> SparkSession: 
     return (
@@ -21,18 +20,44 @@ def create_spark_session(app_name: str, master: str = "spark://spark-master:7077
     )
 
 
-# 2. convert  timestamp to a standardized string event_time.
-def normalize_timestamp( df, source_col: str, target_col: str = "event_time", input_fmt: str = None, output_fmt: str = "yyyy-MM-dd'T'HH:mm:ss", epoch_millis: bool = False, ):
+# get db configs from environment variables
+def get_db_configs():
+    """
+    Retourne la configuration JDBC pour connexion Spark → PostgreSQL (Neon DB)
+    """
+
+    jdbc_url = "postgresql://neondb_owner:npg_fYA2He6tkoyp@ep-proud-waterfall-alx0iv15.c-3.eu-central-1.aws.neon.tech/neondb?sslmode=require"
+
+    properties = {
+        "user": "neondb_owner",
+        "password": "npg_fYA2He6tkoyp",
+        "driver": "org.postgresql.Driver"
+    }
+
+    return jdbc_url, properties
+
+
+def normalize_timestamp(
+    df,
+    source_col: str,
+    target_col: str = "event_time",
+    input_fmt: str = None,
+    epoch_millis: bool = False
+):
     if source_col not in df.columns:
         return df
-    if epoch_millis:
-        parsed = from_unixtime((col(source_col) / 1000.0).cast("double"), output_fmt)
-    elif input_fmt:
-        parsed = date_format(to_timestamp(col(source_col), input_fmt), output_fmt)
-    else:
-        parsed = date_format(to_timestamp(col(source_col)), output_fmt)
-    return df.withColumn(target_col, parsed)
 
+    if epoch_millis:
+        # Binance
+        parsed = to_timestamp((col(source_col) / 1000).cast("double"))
+
+    elif input_fmt:
+        parsed = to_timestamp(col(source_col), input_fmt)
+
+    else:
+        parsed = to_timestamp(col(source_col))
+
+    return df.withColumn(target_col, parsed)
 
 # convert a single field to numeric if it is stored as text,
 def normalize_numeric_column(df, field_name: str, float_scale: int = 3, round_value: bool = False):

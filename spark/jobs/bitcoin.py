@@ -21,12 +21,7 @@ def main():
     trades = drop_duplicates(trades)
 
     # convert epoch milliseconds into a standardized event_time string
-    trades = normalize_timestamp(
-        trades,
-        source_col="open_time",
-        target_col="event_time",
-        epoch_millis=True,
-    )
+    trades = normalize_timestamp(trades, "open_time", epoch_millis=True)
 
     # convert selected numeric fields and round the primary price fields.
     trades = normalize_numeric_columns(

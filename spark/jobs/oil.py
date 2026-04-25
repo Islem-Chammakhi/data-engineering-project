@@ -21,12 +21,7 @@ def main():
     oil_df = drop_duplicates(oil_df)
 
     # normalize the source timestamp into a standardized event_time field
-    oil_df = normalize_timestamp(
-        oil_df,
-        source_col="Datetime",
-        target_col="event_time",
-        input_fmt="yyyy-MM-dd HH:mm:ssXXX",
-    )
+    oil_df = normalize_timestamp(oil_df, "Datetime")
 
     # normalize numeric fields and round the price fields to 3 decimal places.
     oil_df = normalize_numeric_columns(

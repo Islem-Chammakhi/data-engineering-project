@@ -37,8 +37,8 @@ page_size=100
 page=1
 
 def fetch_newsapi_data(from_param,query=query_ar,to=None,language=ar_langugae,sort_by=sort_by,page=page,page_size=page_size):
-    
-    return newsapi.get_everything(q=query,
+    try:
+        return newsapi.get_everything(q=query,
                                       from_param=from_param,
                                       to=to,
                                       language=language,
@@ -46,7 +46,10 @@ def fetch_newsapi_data(from_param,query=query_ar,to=None,language=ar_langugae,so
                                       page=page,
                                       page_size=page_size
                                       )
-
+    except Exception as e:
+        print(f"Error fetching news data from NewsAPI: {e}")
+        raise Exception(f"Error fetching news data from NewsAPI: {str(e)}")
+    
 def format_newsapi_data(newsapi_response):
     articles = newsapi_response.get("articles", [])
     formatted_articles = []
@@ -64,15 +67,18 @@ def format_newsapi_data(newsapi_response):
 
 
 def ingest_newsapi_data():
-    current_time = get_current_utc_time().replace(":","-")
+    current_time = get_current_utc_time()
     last_timestamp = get_last_timestamp("newsapi-arabic")
     print(f"Fetching newsapi data at {current_time}...")
     ar_formatted_news = format_newsapi_data(fetch_newsapi_data(from_param=last_timestamp))
+    if not ar_formatted_news:
+        raise ValueError("No news data fetched to ingest")
     ar_news_metadata= {
       "source": "news api",
       "type": "batch",
       "language": "ar",
       "timestamp": current_time}
+    current_time = current_time.replace(":","-")
     path=f"news/batch/arabic/{current_time}.json"
 
     return {
@@ -83,5 +89,4 @@ def ingest_newsapi_data():
         "length": len(ar_formatted_news)
     }
 
-# if __name__ == "__main__":
-# print(get_newsapi_data())
+# print(format_newsapi_data(fetch_newsapi_data(from_param="2026-04-21T15:34:15")))

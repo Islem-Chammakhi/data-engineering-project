@@ -15,7 +15,7 @@ def run_transformation(source_name,run_id):
     file_path = files_path.get(source_name)
     start_time = datetime.utcnow()
     try:
-        records_count = 100  # exemple
+        
         subprocess.run([
             "docker",
             "exec",
@@ -24,7 +24,7 @@ def run_transformation(source_name,run_id):
             "--master", "spark://spark-master:7077",
             "./jobs/"+file_path 
         ], check=True)
-        log_task(run_id, "transformation", "SUCCESS", start_time, records_count)
+        log_task(run_id, "transformation", "SUCCESS", start_time)
         return {"status": "SUCCESS"}
 
     except Exception as e:

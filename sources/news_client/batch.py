@@ -89,4 +89,4 @@ def ingest_newsapi_data():
         "length": len(ar_formatted_news)
     }
 
-# print(format_newsapi_data(fetch_newsapi_data(from_param="2026-04-21T15:34:15")))
+# print(format_newsapi_data(fetch_newsapi_data(from_param="2026-04-24T00:19:22")))

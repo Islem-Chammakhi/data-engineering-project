@@ -8,10 +8,4 @@ class DimAsset(Base):
     __tablename__ = "dim_asset"
 
     asset_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    symbol = Column(String)
-    open_time = Column(DateTime)
-    open_price = Column(Float)
-    close_price = Column(Float)
-    high_price = Column(Float)
-    low_price = Column(Float)
-    volume = Column(Float)
+    symbol = Column(String, unique=True)  # BTC, GOLD, OIL

@@ -1,7 +1,13 @@
 
-from transformation.utils import create_spark_session, write_parquet
-from pyspark.sql.functions import abs, unix_timestamp,monotonically_increasing_id,row_number,expr,col
+from transformation.utils import create_spark_session, get_db_configs
+from pyspark.sql.functions import abs, unix_timestamp,row_number,expr,col,lit
 from pyspark.sql.window import Window
+
+asset_mapping = {
+    "BTC": "45be0d5a-024e-4738-a223-40021b51b3bb",
+    "GOLD": "b3f804bb-5148-47b7-b4d8-1be81ee095eb",
+    "OIL": "3fdaf722-3322-4b2f-ad2a-d25ee66baf4c"
+}
 
 def is_df_valid(df):
     try:
@@ -18,8 +24,7 @@ def safe_read_parquet(spark, path):
         return None
     
 def transform_and_aggregate(df_news, df_asset, asset_name):
-    df_news = df_news.withColumn("news_id", monotonically_increasing_id())
-    df_asset = df_asset.withColumn("asset_id", monotonically_increasing_id())
+    
 
     df_news = df_news.withColumnRenamed("event_time", "news_time")
     df_asset = df_asset.withColumnRenamed("event_time", "asset_time")
@@ -30,8 +35,7 @@ def transform_and_aggregate(df_news, df_asset, asset_name):
     df_news = df_news.withColumn("news_time_24h", expr("news_time + interval 24 hours"))
     
     df_join = df_news.crossJoin(df_asset)
-    print("Schema for joined data:")
-    df_join.printSchema()
+    
 
     df_join = df_join.withColumn(
     "time_diff_event",
@@ -45,13 +49,16 @@ def transform_and_aggregate(df_news, df_asset, asset_name):
         ).withColumn(
     "time_diff_24h",
         abs(unix_timestamp(col("news_time_24h")) - unix_timestamp(col("asset_time")))
-        )
+        ).withColumn("event_time", col("news_time"))
     
     # price at event time
     w_event = Window.partitionBy("news_id").orderBy("time_diff_event")
     df_event = df_join.withColumn("rank_event", row_number().over(w_event)) \
                   .filter("rank_event = 1") \
-                  .select("news_id", col("close").alias("price_at_event"))
+                  .select("news_id", col("close").alias("price_at_event"),
+                          col("asset_time").alias("asset_time_at_event"),
+                          col("news_time")
+                          )
     
     # price at 1h
     w_1h = Window.partitionBy("news_id").orderBy("time_diff_1h")
@@ -87,9 +94,26 @@ def transform_and_aggregate(df_news, df_asset, asset_name):
         (col("price_24h") - col("price_at_event")) / col("price_at_event"),        
         ).withColumn(
     "spike_flag",
-        (abs(col("price_1h") - col("price_at_event")) / col("price_at_event")) > 0.005)
-    df_final.show(5)
-    return df_final
+        (abs(col("price_1h") - col("price_at_event")) / col("price_at_event")) > 0.005
+        ).withColumn(
+    "asset_id",
+        lit(asset_mapping[asset_name])).withColumn("event_time", col("news_time"))
+    # df_final.show()
+    df_fact = df_final.select(
+    "news_id",
+    "asset_id",
+    "event_time",
+    "asset_time_at_event",
+    "price_at_event",
+    "price_1h",
+    "price_4h",
+    "price_24h",
+    "return_1h",
+    "return_4h",
+    "return_24h",
+    "spike_flag"
+)
+    return df_fact
 
 def main():
     spark = create_spark_session(app_name="silver_to_gold")
@@ -122,25 +146,30 @@ def main():
     print(f"Pipeline continues with assets: {list(valid_assets.keys())}")
 
     # ! explore schema of the dataframes
-    print("Schema for news:")
-    df_news.printSchema()
+    # print("Schema for news:")
+    df_news = df_news.withColumn("news_id", expr("uuid()"))
+    # df_news.printSchema()
+    df_news_db = df_news.select(
+    "news_id",
+    col("title"),
+    col("source"),
+    col("description"),
+    col("event_time").alias("published_time")
+    ).dropDuplicates(["news_id"])
+    jdbc_url, properties = get_db_configs()
+    df_news_db.write \
+            .mode("append") \
+            .jdbc(url=jdbc_url, table="dim_news", properties=properties)
     transformations={}
     for name, df in valid_assets.items():
-        res=transform_and_aggregate(df_news, df, name)
-        transformations[name] = res
+        df_fact=transform_and_aggregate(df_news, df, name)
+        df_fact.write \
+            .mode("append") \
+            .jdbc(url=jdbc_url, table="fact_news_market", properties=properties)
+        transformations[name] = df_fact
 
     print("Transformation and aggregation completed for assets: ", list(transformations.keys()))
-    
-    # test join logic with a single asset (e.g., GOLD)
-    # unique id for news records
-    
-    # df_result.select(
-    # "news_id",
-    # "news_time",
-    # "gold_time",
-    # "close",
-    # "time_diff"
-    # ).show(10, False)
+
 
 if __name__ == "__main__":
     main()

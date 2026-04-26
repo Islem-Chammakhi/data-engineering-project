@@ -26,12 +26,13 @@ def get_db_configs():
     Retourne la configuration JDBC pour connexion Spark → PostgreSQL (Neon DB)
     """
 
-    jdbc_url = "postgresql://neondb_owner:npg_fYA2He6tkoyp@ep-proud-waterfall-alx0iv15.c-3.eu-central-1.aws.neon.tech/neondb?sslmode=require"
+    jdbc_url = "jdbc:postgresql://ep-proud-waterfall-alx0iv15.c-3.eu-central-1.aws.neon.tech/neondb?sslmode=require"
 
     properties = {
         "user": "neondb_owner",
         "password": "npg_fYA2He6tkoyp",
-        "driver": "org.postgresql.Driver"
+        "driver": "org.postgresql.Driver",
+        "stringtype": "unspecified"
     }
 
     return jdbc_url, properties

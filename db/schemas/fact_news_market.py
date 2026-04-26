@@ -13,6 +13,7 @@ class FactNewsMarket(Base):
     asset_id = Column(UUID(as_uuid=True), ForeignKey("dim_asset.asset_id"), nullable=False)
 
     event_time = Column(DateTime)
+    asset_time_at_event = Column(DateTime)
 
     price_at_event = Column(Float)
     price_1h = Column(Float)

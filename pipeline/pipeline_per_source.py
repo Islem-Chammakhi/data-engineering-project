@@ -5,7 +5,7 @@ from utils.minio_client.minio import migrate_to_historical
 from transformation.tansformation import run_transformation
 from db.services.pipeline_service import create_pipeline_run, update_pipeline_run
 
-@flow()
+@flow(name="pipeline-per-source")
 def pipeline_per_source(source_name, ingest_fn ,staging_bucket):
     run_id = create_pipeline_run(source_name)
 

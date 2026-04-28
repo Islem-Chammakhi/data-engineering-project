@@ -4,13 +4,11 @@ datasources:
   - name: logs-etl
     type: postgres
     access: proxy
-    url: ep-proud-waterfall-alx0iv15.c-3.eu-central-1.aws.neon.tech
-    # url: ep-steep-hat-aml39ywe-pooler.c-5.us-east-1.aws.neon.tech
+    url: DB_URL
     database: neondb
     user: neondb_owner
     secureJsonData:
-      password: npg_fYA2He6tkoyp
-      # password: npg_vBdhnb6L9XrT
+      password: PASSWORD
     jsonData:
       sslmode: require
       postgresVersion: 1500

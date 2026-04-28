@@ -1,6 +1,6 @@
 # News-Driven Market Analysis ETL Pipeline
 
-## 📊 Project Overview
+## Project Overview
 
 A **free-tier event-driven ETL pipeline** that ingests **news events** and **market data**, aligns them by timestamp, and analyzes how **crypto (BTC)**, **oil**, and **gold** react to breaking news.
 
@@ -13,7 +13,7 @@ This project correlates news events with price movements to detect:
 
 ---
 
-## 🎯 Main Analysis Questions
+## Main Analysis Questions
 
 1. **Did a sudden price move happen after relevant news?**
    - Example: Iran/war news → oil spikes after
@@ -29,7 +29,7 @@ This project correlates news events with price movements to detect:
 
 ---
 
-## 📡 Data Sources
+## Data Sources
 
 ### Crypto (Real-time & Batch)
 
@@ -51,7 +51,7 @@ This project correlates news events with price movements to detect:
 
 ---
 
-## 🏗️ Architecture & Tech Stack
+## Architecture & Tech Stack
 
 ### Core Technologies
 
@@ -69,7 +69,7 @@ This project correlates news events with price movements to detect:
 
 ---
 
-## 📂 Project Structure
+## Project Structure
 
 ```
 data_engineering/
@@ -165,7 +165,7 @@ data_engineering/
 
 ---
 
-## 🔄 High-Level Pipeline Flow
+## High-Level Pipeline Flow
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -260,24 +260,24 @@ data_engineering/
 
 ---
 
-## 🎯 MVP Focus
+## MVP Focus
 
 The initial release includes:
 
-- ✅ **Binance REST API** for BTC historical data
-- ✅ **Yahoo Finance** for Oil & Gold periodic polling
-- ✅ **GDELT 2.0** for news micro-batch ingestion
-- ✅ **MinIO** for data lake storage (Bronze/Silver/Gold layers)
-- ✅ **Neon PostgreSQL** for analytical tables
-- ✅ **Streamlit** dashboard for real-time insights
-- ✅ **PySpark** for distributed data transformations
-- ✅ **Kafka** for streaming architecture (simulated)
-- ✅ **Prefect** for workflow orchestration
-- ✅ **Docker Compose** for local development & deployment
+- **Binance REST API** for BTC historical data
+- **Yahoo Finance** for Oil & Gold periodic polling
+- **GDELT 2.0** for news micro-batch ingestion
+- **MinIO** for data lake storage (Bronze/Silver/Gold layers)
+- **Neon PostgreSQL** for analytical tables
+- **Streamlit** dashboard for real-time insights
+- **PySpark** for distributed data transformations
+- **Kafka** for streaming architecture (simulated)
+- **Prefect** for workflow orchestration
+- **Docker Compose** for local development & deployment
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 
@@ -344,17 +344,7 @@ The initial release includes:
 
 ---
 
-## 📖 Documentation
-
-Detailed documentation for each layer is maintained in the `docs/` folder:
-
-- **[Batch Ingestion](docs/batch-ingestion.md)** — API calls, data parsing, MinIO storage
-- **[Streaming Ingestion](docs/streaming-ingestion.md)** — Kafka setup, producer/consumer configuration
-- **[Spark Transformations](docs/spark-transformation.md)** — Bronze-to-Silver-to-Gold jobs, correlation analysis
-
----
-
-## 🗄️ Data Schema
+## Data Schema
 
 ### Dimension Tables
 
@@ -398,7 +388,7 @@ Detailed documentation for each layer is maintained in the `docs/` folder:
 
 ---
 
-## 🔧 Configuration
+## Configuration
 
 ### MinIO Buckets (S3-compatible, 3-tier data architecture)
 
@@ -462,22 +452,7 @@ spark/transformation/ # Shared utilities & aggregations
 4. Add Spark transformation job in `spark/jobs/`
 5. Update Prefect flow in `pipeline/main_flow.py`
 
-### Running Tests
-
-```bash
-docker-compose exec master pytest tests/
-```
-
-### Building Custom Docker Image
-
-```bash
-docker build -f Dockerfile -t data-engineering:latest .
-docker build -f docker/streamlit/Dockerfile -t data-engineering-streamlit:latest .
-```
-
----
-
-## 📈 Performance Considerations
+## Performance Considerations
 
 - **Spark**: Partitioned by asset & date for optimized queries
 - **Database**: Indexes on (asset_id, timestamp) for fast lookups
@@ -487,7 +462,7 @@ docker build -f docker/streamlit/Dockerfile -t data-engineering-streamlit:latest
 
 ---
 
-## 🔒 Security Best Practices
+## Security Best Practices
 
 - All API credentials stored in `.env` (never commit!)
 - PostgreSQL password rotation recommended monthly
@@ -497,7 +472,7 @@ docker build -f docker/streamlit/Dockerfile -t data-engineering-streamlit:latest
 
 ---
 
-## 📋 Roadmap
+## Roadmap
 
 - [ ] Real-time Kafka streaming for BTC
 - [ ] Multi-language news NLP sentiment analysis
@@ -510,39 +485,13 @@ docker build -f docker/streamlit/Dockerfile -t data-engineering-streamlit:latest
 
 ---
 
-## 🤝 Contributing
-
-1. Create a feature branch (`git checkout -b feature/new-source`)
-2. Make changes and test locally
-3. Submit pull request with documentation
-4. Ensure all tests pass in CI/CD
-
----
-
-## 📝 License
-
-MIT License - See LICENSE file for details
-
----
-
-## 📧 Contact & Support
+## Contact & Support
 
 For questions or issues:
 
 - Check existing [GitHub Issues](issues)
 - Review documentation in `docs/` folder
 - Contact: [your-email]
-
----
-
-## 🙏 Acknowledgments
-
-- **Binance** for high-quality market data APIs
-- **GDELT** for global event data
-- **Neon** for serverless PostgreSQL
-- **Apache Spark** & **Kafka** communities
-- **Prefect** for workflow orchestration
-- **Streamlit** for rapid dashboard development
 
 ---
 

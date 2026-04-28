@@ -61,3 +61,5 @@ def ingest_bitcoin_data(interval="1m"):
         "timestamp": current_time,
         "length": len(transformed_data)
     }
+
+# print(ingest_bitcoin_data())

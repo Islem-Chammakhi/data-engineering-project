@@ -28,12 +28,21 @@ def get_db_configs():
 
     jdbc_url = "jdbc:postgresql://ep-proud-waterfall-alx0iv15.c-3.eu-central-1.aws.neon.tech/neondb?sslmode=require"
 
+    # jdbc_url = "jdbc:postgresql://ep-steep-hat-aml39ywe-pooler.c-5.us-east-1.aws.neon.tech/neondb?sslmode=require"
+
     properties = {
         "user": "neondb_owner",
         "password": "npg_fYA2He6tkoyp",
         "driver": "org.postgresql.Driver",
         "stringtype": "unspecified"
     }
+
+    # properties = {
+    #     "user": "neondb_owner",
+    #     "password": "npg_vBdhnb6L9XrT",
+    #     "driver": "org.postgresql.Driver",
+    #     "stringtype": "unspecified"
+    # }
 
     return jdbc_url, properties
 

@@ -69,4 +69,4 @@ def ingest_oil_data(interval="1m"):
     }
 
 
-# print(ingest_gold_data())
+# print(ingest_oil_data())

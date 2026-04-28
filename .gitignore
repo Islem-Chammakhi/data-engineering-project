@@ -3,3 +3,4 @@
 minio_data/
 .env
 ./__pycache__/
+./__pycache__/
